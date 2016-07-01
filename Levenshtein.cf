@@ -1,0 +1,11 @@
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  header    LEVENSHTEIN_EXAMPLE_VCLOSE  eval:check_levenshtein_from('example.com', 1)
+  describe  LEVENSHTEIN_EXAMPLE_VCLOSE  From domain has distance of 1 from example.co
+  score     LEVENSHTEIN_EXAMPLE_VCLOSE  0.1
+
+  header    LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  eval:check_levenshtein_from('example.com', 2)
+  describe  LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  From domain has distance of 2 or less from example.com
+  score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
+
+endif
