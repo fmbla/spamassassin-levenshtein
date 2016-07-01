@@ -1,7 +1,13 @@
+# Example config
+#
+# Input for check_levenshtein_from:
+#
+# check_levenshtein_from( str <domain>, int <distance>, int [use_tld] default: 0 )
+
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
   header    LEVENSHTEIN_EXAMPLE_VCLOSE  eval:check_levenshtein_from('example.com', 1)
-  describe  LEVENSHTEIN_EXAMPLE_VCLOSE  From domain has distance of 1 from example.co
+  describe  LEVENSHTEIN_EXAMPLE_VCLOSE  From domain has distance of 1 from example.com
   score     LEVENSHTEIN_EXAMPLE_VCLOSE  0.1
 
   header    LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  eval:check_levenshtein_from('example.com', 2)

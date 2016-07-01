@@ -3,9 +3,7 @@ my $VERSION = 0.01;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
-use File::Basename;
 use List::Util ();
-
 
 use vars qw(@ISA);
 @ISA = qw(Mail::SpamAssassin::Plugin);
@@ -30,11 +28,11 @@ sub new {
 
 sub check_levenshtein_from
 {
-  my ($self, $pms, $str, $tdist, $ignore_tld) = @_;
+  my ($self, $pms, $str, $tdist, $use_tld) = @_;
 
   my $re = '^((?![0-9]+$)(?!.*-$)(?!-)[a-zA-Z0-9-]{1,63})';
 
-  if (!$ignore_tld) {
+  if (!$use_tld) {
     $str =~ /$re/;
     $str = $1;
   }
@@ -42,7 +40,7 @@ sub check_levenshtein_from
   foreach ($pms->all_from_addrs_domains()) {
       $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
 
-      if (!$ignore_tld) {
+      if (!$use_tld) {
         $_ =~ /$re/;
         $_ =  $1;
       }
