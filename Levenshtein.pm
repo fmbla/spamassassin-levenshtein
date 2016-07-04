@@ -43,7 +43,7 @@ sub check_levenshtein
       $_ =~ /$re/;
       $_ = lc($1);
       my $distance = distance($from, $_);
-      dbg("yay Distance from $from to $_ = $distance");
+      dbg("Distance from $from to $_ = $distance");
 
       if (($distance > 0) && ($distance <= $tdist)) {
         return 1;
