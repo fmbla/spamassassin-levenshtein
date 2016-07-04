@@ -6,6 +6,10 @@
 
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
+  header    LEVENSHTEIN  eval:check_levenshtein()
+  describe  LEVENSHTEIN  From address has a close distance to To address
+  score     LEVENSHTEIN  0.1
+
   header    LEVENSHTEIN_EXAMPLE_VCLOSE  eval:check_levenshtein_from('example.com', 1)
   describe  LEVENSHTEIN_EXAMPLE_VCLOSE  From domain has distance of 1 from example.com
   score     LEVENSHTEIN_EXAMPLE_VCLOSE  0.1

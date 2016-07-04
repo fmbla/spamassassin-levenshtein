@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.01;
+my $VERSION = 0.02;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -21,9 +21,37 @@ sub new {
   bless ($self, $class);
 
   # the important bit!
+  $self->register_eval_rule("check_levenshtein");
   $self->register_eval_rule("check_levenshtein_from");
 
   return $self;
+}
+
+sub check_levenshtein
+{
+  my ($self, $pms) = @_;
+
+  my $re = '^((?![0-9]+$)(?!.*-$)(?!-)[a-zA-Z0-9-]{1,63})';
+  my $from = Mail::SpamAssassin::Util::uri_to_domain(lc($pms->get("From:addr")));
+  $from =~ /$re/;
+  $from = $1;
+
+  my $tdist = (length $from < 10) ? 1:2;
+
+  foreach ($pms->all_to_addrs()) {
+      $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
+      $_ =~ /$re/;
+      $_ = lc($1);
+      my $distance = distance($from, $_);
+      dbg("yay Distance from $from to $_ = $distance");
+
+      if (($distance > 0) && ($distance <= $tdist)) {
+        return 1;
+      }
+
+  }
+
+  return 0;
 }
 
 sub check_levenshtein_from
