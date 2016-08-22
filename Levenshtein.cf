@@ -6,7 +6,9 @@
 
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
-  header    LEVENSHTEIN  eval:check_levenshtein()
+  header   __LEVENSHTEIN_FROM eval:check_levenshtein()
+
+  meta      LEVENSHTEIN  !FREEMAIL_FROM && __LEVENSHTEIN_FROM
   describe  LEVENSHTEIN  From address has a close distance to To address
   score     LEVENSHTEIN  0.1
 
