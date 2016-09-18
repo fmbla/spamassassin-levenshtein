@@ -2,7 +2,8 @@
 #
 # Input for check_levenshtein_from:
 #
-# check_levenshtein_from( str <domain>, int <distance>, int [use_tld] default: 0 )
+# check_levenshtein_from( str <domain>, int [distance], bool [use_tld] default: 0 )
+# check_levenshtein_name( str <match word>, int [distance] )
 
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
@@ -19,5 +20,11 @@ ifplugin Mail::SpamAssassin::Plugin::Levenshtein
   header    LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  eval:check_levenshtein_from('example.com', 2)
   describe  LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  From domain has distance of 2 or less from example.com
   score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
+
+  header    __LEVENSHTEIN_FROM_NAME_PAYPAL  eval:check_levenshtein_name('paypal', 1)
+
+  meta      LEVENSHTEIN_FROM_NAME_PAYPAL  !USER_IN_DEF_DKIM_WL && __LEVENSHTEIN_FROM_NAME_PAYPAL
+  describe  LEVENSHTEIN_FROM_NAME_PAYPAL  From name looks like PayPal and isn't in SA default DKIM_WL
+  score     LEVENSHTEIN_FROM_NAME_PAYPAL  0.1
 
 endif

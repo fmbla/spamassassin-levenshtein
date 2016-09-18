@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.02;
+my $VERSION = 0.1;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -11,7 +11,8 @@ use vars qw(@ISA);
 sub dbg { Mail::SpamAssassin::Plugin::dbg ("Levenshtein: @_"); }
 
 # constructor: register the eval rule
-sub new {
+sub new
+{
   my $class = shift;
   my $mailsaobject = shift;
 
@@ -20,67 +21,139 @@ sub new {
   my $self = $class->SUPER::new($mailsaobject);
   bless ($self, $class);
 
+  $self->set_config($mailsaobject->{conf});
+
   # the important bit!
   $self->register_eval_rule("check_levenshtein");
   $self->register_eval_rule("check_levenshtein_from");
+  $self->register_eval_rule("check_levenshtein_name");
 
   return $self;
 }
 
+sub set_config {
+  my ($self, $conf) = @_;
+  my @cmds = ();
+  push(@cmds, {
+    setting => 'levenshtein_short_dist',
+    default => 1,
+    type => $Mail::SpamAssassin::Conf::CONF_TYPE_NUMERIC,
+    }
+  );
+  push(@cmds, {
+    setting => 'levenshtein_long_dist',
+    default => 2,
+    type => $Mail::SpamAssassin::Conf::CONF_TYPE_NUMERIC,
+    }
+  );
+  push(@cmds, {
+    setting => 'levenshtein_short_length',
+    default => 10,
+    type => $Mail::SpamAssassin::Conf::CONF_TYPE_NUMERIC,
+    }
+  );
+  push(@cmds, {
+    setting => 'levenshtein_use_tld',
+    default => 0,
+    type => $Mail::SpamAssassin::Conf::CONF_TYPE_BOOL,
+    }
+  );
+
+  $conf->{parser}->register_commands(\@cmds);
+}
+
 sub check_levenshtein
 {
-  my ($self, $pms) = @_;
+  my ($self, $pms, $tdist, $use_tld) = @_;
 
-  my $re = '^((?![0-9]+$)(?!.*-$)(?!-)[a-zA-Z0-9-]{1,63})';
-  my $from = Mail::SpamAssassin::Util::uri_to_domain(lc($pms->get("From:addr")));
-  $from =~ /$re/;
-  $from = $1;
+  my $from = $pms->get("From:addr");
 
-  my $tdist = (length $from < 10) ? 1:2;
+  if (_check_levenshtein_addr_arr($pms, $from, $tdist, $use_tld, 0, $pms->all_to_addrs())) {
+    return 1;
+  }
 
-  foreach ($pms->all_to_addrs()) {
-      $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
-      $_ =~ /$re/;
-      $_ = lc($1);
-      my $distance = distance($from, $_);
-      dbg("Distance from $from to $_ = $distance");
+  return 0;
+}
 
-      if (($distance > 0) && ($distance <= $tdist)) {
-        return 1;
-      }
+sub check_levenshtein_name
+{
+  my ($self, $pms, $compare, $tdist) = @_;
+
+  my @target = split /\s/, $pms->get("From:name");
+
+  if (_check_levenshtein_addr_arr($pms, $compare, $tdist, 0, 1, @target)) {
+    return 1;
+  }
+  
+}
+
+sub check_levenshtein_from
+{
+  my ($self, $pms, $compare, $tdist, $use_tld) = @_;
+
+  if (_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, $pms->all_from_addrs_domains())) {
+    return 1;
+  }
+
+  return 0;
+}
+
+sub _check_levenshtein_addr_arr
+{
+  my ($pms, $from, $tdist, $use_tld, $exact_match, @to_array) = @_;
+  $from = Mail::SpamAssassin::Util::uri_to_domain($from) || $from;
+
+  return 0 if (!length $from);
+
+  my ($fromdom, $fromtld) = _split_dom($from);
+  my $flength = length $fromdom;
+
+  return 0 if ($flength == 0);
+
+  $tdist = defined $tdist ? $tdist : _auto_dist($pms, $fromdom);
+  $use_tld = defined $use_tld ? $use_tld : $pms->{main}->{conf}->{levenshtein_use_tld};
+
+  foreach (@to_array) {
+    $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
+    my ($todom, $totld) = _split_dom($_);
+    my $tolength = length $todom;
+
+    next if (!$tolength);
+
+    my $tld_adj = 0;
+    $tld_adj = 1 if (($use_tld) && ($fromtld ne $totld));
+
+    my $ldiff = abs($flength - $tolength) + $tld_adj;
+
+    dbg("T1=$_ T2=$from TLD=$use_tld T=$tdist L=$ldiff");
+    next if ($ldiff > $tdist);
+
+    my $distance = distance($fromdom, $todom) + $tld_adj;
+    dbg("T1=$_ T2=$from TLD=$use_tld T=$tdist L=$ldiff D=$distance");
+
+    if ((($distance > 0) || ($distance == 0 && $exact_match)) && ($distance <= $tdist)) {
+      return 1;
+    }
 
   }
 
   return 0;
 }
 
-sub check_levenshtein_from
+sub _split_dom
 {
-  my ($self, $pms, $str, $tdist, $use_tld) = @_;
+  my ($input) = @_;
+  my $re = '^([a-zA-Z0-9-]{1,63})(.*)$';
+  $input =~ /$re/;
+  my $domain = lc($1) || '';
+  my $tld = lc($2) || '';
+  $tld =~ s/^\.//;
+  return ($domain, $tld);
+}
 
-  my $re = '^((?![0-9]+$)(?!.*-$)(?!-)[a-zA-Z0-9-]{1,63})';
-
-  if (!$use_tld) {
-    $str =~ /$re/;
-    $str = $1;
-  }
-
-  foreach ($pms->all_from_addrs_domains()) {
-      $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
-
-      if (!$use_tld) {
-        $_ =~ /$re/;
-        $_ =  $1;
-      }
-
-      my $distance = distance($str, $_);
-      dbg("Distance from $str to $_ = $distance");
-
-      if (($distance > 0) && ($distance <= $tdist)) {
-        return 1;
-      }
-  }
-  return 0;
+sub _auto_dist {
+  my ($pms, $input) = @_;
+  return (length $input < $pms->{main}->{conf}->{levenshtein_short_length}) ? $pms->{main}->{conf}->{levenshtein_short_dist}:$pms->{main}->{conf}->{levenshtein_long_dist};
 }
 
 # Taken from CPAN module at
