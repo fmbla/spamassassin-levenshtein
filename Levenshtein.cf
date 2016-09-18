@@ -21,6 +21,8 @@ ifplugin Mail::SpamAssassin::Plugin::Levenshtein
   describe  LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  From domain has distance of 2 or less from example.com
   score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
 
+  ## Test feature !!!
+
   header    __LEVENSHTEIN_FROM_NAME_PAYPAL  eval:check_levenshtein_name('paypal', 1)
 
   meta      LEVENSHTEIN_FROM_NAME_PAYPAL  !USER_IN_DEF_DKIM_WL && __LEVENSHTEIN_FROM_NAME_PAYPAL

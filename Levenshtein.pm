@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.1;
+my $VERSION = 0.11;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -118,7 +118,7 @@ sub _check_levenshtein_addr_arr
     my ($todom, $totld) = _split_dom($_);
     my $tolength = length $todom;
 
-    next if (!$tolength);
+    next if ($tolength == 0);
 
     my $tld_adj = 0;
     $tld_adj = 1 if (($use_tld) && ($fromtld ne $totld));
