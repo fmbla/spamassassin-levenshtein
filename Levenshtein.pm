@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.12;
+my $VERSION = 0.13;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -86,7 +86,8 @@ sub check_levenshtein_name
   if (_check_levenshtein_addr_arr($pms, $compare, $tdist, 0, $exact_match, @target)) {
     return 1;
   }
-  
+
+  return 0;  
 }
 
 sub check_levenshtein_from
