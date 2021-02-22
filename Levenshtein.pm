@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.30;
+my $VERSION = 0.31;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -96,10 +96,11 @@ sub check_levenshtein_reply
   my ($self, $pms, $tdist, $use_tld) = @_;
 
   my $compare = $pms->get("Reply-To:addr");
+  my @froms = ( $pms->get('From:addr') );
 
   return 0 unless $compare;
 
-  if ($self->_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, $pms->all_from_addrs_domains())) {
+  if ($self->_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, @froms)) {
     return 1;
   }
 
