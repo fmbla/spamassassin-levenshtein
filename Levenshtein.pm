@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.21;
+my $VERSION = 0.30;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -32,6 +32,11 @@ sub new
   bless ($self, $class);
 
   $self->set_config($mailsaobject->{conf});
+
+  if (eval { require Text::Levenshtein::Damerau; }) {
+    $self->{damerau_available} = 1;
+    dbg("Text::Levenshtein::Damerau is available");
+  }
 
   # the important bit!
   $self->register_eval_rule("check_levenshtein");
@@ -157,7 +162,7 @@ sub _check_levenshtein_addr_arr
     dbg("T1=$_ T2=$from TLD=$use_tld T=$tdist L=$ldiff");
     next if ($ldiff > $tdist);
 
-    my $distance = distance($fromdom, $todom) + $tld_adj;
+    my $distance = $self->distance($fromdom, $todom) + $tld_adj;
     dbg("T1=$_ T2=$from TLD=$use_tld T=$tdist L=$ldiff D=$distance");
 
     if ((($distance > 0) || ($distance == 0 && $exact_match)) && ($distance <= $tdist)) {
@@ -167,6 +172,17 @@ sub _check_levenshtein_addr_arr
   }
 
   return 0;
+}
+
+sub distance
+{
+  my ($self, $from, $to) = @_;
+  if ($self->{damerau_available}) {
+    my $tld = Text::Levenshtein::Damerau->new($from);
+    return $tld->dld($to);
+  } else {
+    return internal_distance($from, $to);
+  }
 }
 
 sub _split_dom
@@ -194,7 +210,7 @@ sub _auto_dist {
 # Copyright (C) 2014- Neil Bowers.
 #
 
-sub distance
+sub internal_distance
 {
     my $opt = pop(@_) if @_ > 0 && ref($_[-1]) eq 'HASH';
     die "distance() takes 2 or more arguments" if @_ < 2;
