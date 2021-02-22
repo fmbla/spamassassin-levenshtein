@@ -23,7 +23,7 @@ ifplugin Mail::SpamAssassin::Plugin::Levenshtein
   score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
 
   header    LEVENSHTEIN_REPLY eval:check_levenshtein_reply()
-  describe  LEVENSHTEIN_REPLY Reply-To is has a close distance to From
+  describe  LEVENSHTEIN_REPLY Reply-To has a close distance to From
   score     LEVENSHTEIN_REPLY 0.1
 
   ## Test feature !!!
