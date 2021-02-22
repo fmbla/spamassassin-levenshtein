@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.13;
+my $VERSION = 0.2;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -9,6 +9,16 @@ use vars qw(@ISA);
 @ISA = qw(Mail::SpamAssassin::Plugin);
 
 sub dbg { Mail::SpamAssassin::Plugin::dbg ("Levenshtein: @_"); }
+
+sub uri_to_domain {
+  my ($self, $domain) = @_;
+
+  if ($Mail::SpamAssassin::VERSION <= 3.004000) {
+    Mail::SpamAssassin::Util::uri_to_domain($domain);
+  } else {
+    $self->{main}->{registryboundaries}->uri_to_domain($domain);
+  }
+}
 
 # constructor: register the eval rule
 sub new
@@ -68,7 +78,7 @@ sub check_levenshtein
 
   my $from = $pms->get("From:addr");
 
-  if (_check_levenshtein_addr_arr($pms, $from, $tdist, $use_tld, 0, $pms->all_to_addrs())) {
+  if ($self->_check_levenshtein_addr_arr($pms, $from, $tdist, $use_tld, 0, $pms->all_to_addrs())) {
     return 1;
   }
 
@@ -83,7 +93,7 @@ sub check_levenshtein_name
 
   $exact_match = defined $exact_match ? $exact_match : 1;
 
-  if (_check_levenshtein_addr_arr($pms, $compare, $tdist, 0, $exact_match, @target)) {
+  if ($self->_check_levenshtein_addr_arr($pms, $compare, $tdist, 0, $exact_match, @target)) {
     return 1;
   }
 
@@ -94,7 +104,7 @@ sub check_levenshtein_from
 {
   my ($self, $pms, $compare, $tdist, $use_tld) = @_;
 
-  if (_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, $pms->all_from_addrs_domains())) {
+  if ($self->_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, $pms->all_from_addrs_domains())) {
     return 1;
   }
 
@@ -103,8 +113,8 @@ sub check_levenshtein_from
 
 sub _check_levenshtein_addr_arr
 {
-  my ($pms, $from, $tdist, $use_tld, $exact_match, @to_array) = @_;
-  $from = Mail::SpamAssassin::Util::uri_to_domain($from) || $from;
+  my ($self, $pms, $from, $tdist, $use_tld, $exact_match, @to_array) = @_;
+  $from = $self->uri_to_domain($from) || $from;
 
   return 0 if (!length $from);
 
@@ -117,7 +127,7 @@ sub _check_levenshtein_addr_arr
   $use_tld = defined $use_tld ? $use_tld : $pms->{main}->{conf}->{levenshtein_use_tld};
 
   foreach (@to_array) {
-    $_ = Mail::SpamAssassin::Util::uri_to_domain($_) || $_;
+    $_ = $self->uri_to_domain($_) || $_;
     my ($todom, $totld) = _split_dom($_);
     my $tolength = length $todom;
 
