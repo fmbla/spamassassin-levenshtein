@@ -4,6 +4,7 @@
 #
 # check_levenshtein_from( str <domain>, int [distance], bool [use_tld] default: 0 )
 # check_levenshtein_name( str <match word>, int [distance], bool [allow_exact_match] default: 1 )
+# check_levenshtein_reply( int [distance] default: auto, bool [use_tld] default: 0 )
 
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
