@@ -21,6 +21,10 @@ ifplugin Mail::SpamAssassin::Plugin::Levenshtein
   describe  LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  From domain has distance of 2 or less from example.com
   score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
 
+  header    LEVENSHTEIN_REPLY eval:check_levenshtein_reply()
+  describe  LEVENSHTEIN_REPLY Reply-To is has a close distance to From
+  score     LEVENSHTEIN_REPLY 0.1
+
   ## Test feature !!!
 
   header    __LEVENSHTEIN_FROM_NAME_PAYPAL  eval:check_levenshtein_name('paypal', 1)
