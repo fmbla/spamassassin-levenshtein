@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.31;
+my $VERSION = 0.32;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
