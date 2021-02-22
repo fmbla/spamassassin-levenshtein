@@ -35,6 +35,7 @@ sub new
 
   # the important bit!
   $self->register_eval_rule("check_levenshtein");
+  $self->register_eval_rule("check_levenshtein_reply");
   $self->register_eval_rule("check_levenshtein_from");
   $self->register_eval_rule("check_levenshtein_name");
 
@@ -79,6 +80,21 @@ sub check_levenshtein
   my $from = $pms->get("From:addr");
 
   if ($self->_check_levenshtein_addr_arr($pms, $from, $tdist, $use_tld, 0, $pms->all_to_addrs())) {
+    return 1;
+  }
+
+  return 0;
+}
+
+sub check_levenshtein_reply
+{
+  my ($self, $pms, $tdist, $use_tld) = @_;
+
+  my $compare = $pms->get("Reply-To:addr");
+
+  return 0 unless $compare;
+
+  if ($self->_check_levenshtein_addr_arr($pms, $compare, $tdist, $use_tld, 0, $pms->all_from_addrs_domains())) {
     return 1;
   }
 
