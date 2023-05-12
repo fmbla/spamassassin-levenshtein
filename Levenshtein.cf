@@ -76,3 +76,17 @@ ifplugin Mail::SpamAssassin::Plugin::Levenshtein
   score     LEVENSHTEIN_FROM_NAME_PAYPAL  0.1
 
 endif
+
+ifplugin Mail::SpamAssassin::Plugin::WLBLEval && Mail::SpamAssassin::Plugin::Levenshtein
+  # Have a list of protect To domains which are checked for Levenshtein distance
+
+  enlist_addrlist (LEVENSHTEINPROTECT) *@example.com
+
+  header  __LEVENSHTEIN_PROTECT eval:check_to_in_list('LEVENSHTEINPROTECT')
+
+  header   __LEVENSHTEIN_FROM eval:check_levenshtein()
+
+  meta      LEVENSHTEIN  __LEVENSHTEIN_PROTECT && __LEVENSHTEIN_FROM
+  describe  LEVENSHTEIN  From address has a close distance to protected To address
+  score     LEVENSHTEIN  0.1
+endif
