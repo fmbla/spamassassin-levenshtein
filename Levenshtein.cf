@@ -8,25 +8,66 @@
 
 ifplugin Mail::SpamAssassin::Plugin::Levenshtein
 
+  # Compare From to To - auto distance based on config below
+  
+  levenshtein_short_length 10
+  levenshtein_short_dist 1
+  levenshtein_long_dist 2
+  levenshtein_use_tld 0
+  
   header   __LEVENSHTEIN_FROM eval:check_levenshtein()
 
   meta      LEVENSHTEIN  !FREEMAIL_FROM && __LEVENSHTEIN_FROM
   describe  LEVENSHTEIN  From address has a close distance to To address
   score     LEVENSHTEIN  0.1
 
+endif
+
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  # Compare From to To - distance 3
+  
+  header   __LEVENSHTEIN_FROM eval:check_levenshtein(3)
+
+  meta      LEVENSHTEIN_DIST_3  !FREEMAIL_FROM && __LEVENSHTEIN_FROM
+  describe  LEVENSHTEIN_DIST_3  From address has a close distance to To address
+  score     LEVENSHTEIN_DIST_3  0.1
+
+endif
+
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  # Compare From domain to example.com, distance 1
+
   header    LEVENSHTEIN_EXAMPLE_VCLOSE  eval:check_levenshtein_from('example.com', 1)
   describe  LEVENSHTEIN_EXAMPLE_VCLOSE  From domain has distance of 1 from example.com
   score     LEVENSHTEIN_EXAMPLE_VCLOSE  0.1
+
+endif
+
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  # Compare From domain to example.com, distance 2
 
   header    LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  eval:check_levenshtein_from('example.com', 2)
   describe  LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  From domain has distance of 2 or less from example.com
   score     LEVENSHTEIN_EXAMPLE_NOTSOCLOSE  0.1
 
+endif
+
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  # Compare Reply-To to From - auto distance based on config
+
   header    LEVENSHTEIN_REPLY eval:check_levenshtein_reply()
   describe  LEVENSHTEIN_REPLY Reply-To has a close distance to From
   score     LEVENSHTEIN_REPLY 0.1
 
-  ## Test feature !!!
+endif
+
+ifplugin Mail::SpamAssassin::Plugin::Levenshtein
+
+  # Compare From name to "paypal" with distance 1
 
   header    __LEVENSHTEIN_FROM_NAME_PAYPAL  eval:check_levenshtein_name('paypal', 1)
 
