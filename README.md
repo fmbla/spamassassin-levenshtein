@@ -4,13 +4,13 @@ Measure Levenshtein distance for targets in spamassassin
 # Functions
 
 ## check_levenshtein
-Check From:addr against all To:addr using plugin config settings
+Compare From:addr against all To:addr using plugin config settings
 
 ## check_levenshtein_from( str <domain>, int [distance], bool [use_tld] default: 0 )
-Check From addresses against `str domain` return true if distance equal or less than `int distance`
+Compare From addresses against `str domain` return true if distance equal or less than `int distance`
 
 ## check_levenshtein_name( str <word>, int [distance], bool [allow_exact_match] default: 1 )
-Check From name against `str word` return true if distance equal or less than `int distance` 
+Compare From name against `str word` return true if distance equal or less than `int distance` 
 
 ## check_levenshtein_reply( int [distance] default: auto, bool [use_tld] default: 0 )
 Compare From:addr to Reply-To:addr return true if distance qual or less than `int distance` 
