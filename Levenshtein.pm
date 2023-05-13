@@ -1,5 +1,5 @@
 package Mail::SpamAssassin::Plugin::Levenshtein;
-my $VERSION = 0.32;
+my $VERSION = 0.33;
 
 use strict;
 use Mail::SpamAssassin::Plugin;
@@ -140,17 +140,17 @@ sub _check_levenshtein_addr_arr
 
   return 0 if (!length $from);
 
-  my ($fromdom, $fromtld) = _split_dom($from);
+  my ($fromdom, $fromtld) = $self->_split_dom($from);
   my $flength = length $fromdom;
 
   return 0 if ($flength == 0);
 
-  $tdist = defined $tdist ? $tdist : _auto_dist($pms, $fromdom);
+  $tdist = defined $tdist ? $tdist : $self->_auto_dist($pms, $fromdom);
   $use_tld = defined $use_tld ? $use_tld : $pms->{main}->{conf}->{levenshtein_use_tld};
 
   foreach (@to_array) {
     $_ = $self->uri_to_domain($_) || $_;
-    my ($todom, $totld) = _split_dom($_);
+    my ($todom, $totld) = $self->_split_dom($_);
     my $tolength = length $todom;
 
     next if ($tolength == 0);
@@ -188,17 +188,17 @@ sub distance
 
 sub _split_dom
 {
-  my ($input) = @_;
-  my $re = '^([a-zA-Z0-9-]{1,63})(.*)$';
-  $input =~ /$re/;
-  my $domain = lc($1) || '';
-  my $tld = lc($2) || '';
-  $tld =~ s/^\.//;
+  my ($self, $input) = @_;
+  my @domparts = split(/\./, $input);
+
+  my $domain = lc( shift @domparts );
+  my $tld = lc( join(".", @domparts) );
+
   return ($domain, $tld);
 }
 
 sub _auto_dist {
-  my ($pms, $input) = @_;
+  my ($self, $pms, $input) = @_;
   return (length $input < $pms->{main}->{conf}->{levenshtein_short_length}) ? $pms->{main}->{conf}->{levenshtein_short_dist}:$pms->{main}->{conf}->{levenshtein_long_dist};
 }
 
