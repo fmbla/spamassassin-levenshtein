@@ -1,6 +1,8 @@
 # spamassassin-levenshtein
 Measure Levenshtein distance for targets in spamassassin
 
+Optional: If Text::Levenshtein::Damerau is installed it will be used
+
 # Functions
 
 ## check_levenshtein
